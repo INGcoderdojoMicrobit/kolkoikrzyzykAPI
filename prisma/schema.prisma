@@ -23,6 +23,7 @@ model Token {
   id        BigInt   @id @default(autoincrement())
   token     String   @unique
   createdAt DateTime @default(now())
+  expiresAt DateTime @default(now())
   userId    BigInt
   user      User     @relation(fields: [userId], references: [id])
 }

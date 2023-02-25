@@ -29,7 +29,17 @@ app.use(async (req, res, next) => {
 
   if (!tokens[0]) return res.status(401).send("Unauthorized");
 
+  if (tokens[0].expiresAt < new Date()) {
+    await prisma.token.delete({
+      where: {
+        id: tokens[0].id
+      }
+    });
+    return res.status(401).send("Unauthorized");
+  }
+
   req.user = tokens[0].userId;
+  req.token = tokens[0].token;
   next();
 });
 

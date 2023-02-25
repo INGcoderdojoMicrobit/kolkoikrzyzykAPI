@@ -1,6 +1,7 @@
 declare namespace Express {
   interface Request {
     user: BigInt | undefined;
+    token: string | undefined;
     prisma: import("@prisma/client").PrismaClient;
   }
 }
