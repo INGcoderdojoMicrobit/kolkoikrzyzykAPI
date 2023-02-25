@@ -1,0 +1,37 @@
+{
+  "name": "pewno-fullstack",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "setup": "npm install && npm run build",
+    "start": "npm run build && npm run start:bundle",
+    "start:bundle": "node --enable-source-maps dist/src/start.js",
+    "start:bundle:dbg": "node --enable-source-maps --inspect dist/src/start.js",
+    "start:bundle:vscode-dbg": "npm run build && node --enable-source-maps --inspect dist/src/start.js",
+    "tsnode": "npx ts-node --transpile-only src/start.ts",
+    "prepublish": "npx --yes -p prettier@latest -p pretty-quick pretty-quick",
+    "prettier": "npx --yes -p prettier@latest -p pretty-quick pretty-quick"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^4.10.1",
+    "argon2": "^0.30.3",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "typescript": "^4.9.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^18.14.1",
+    "prettier": "^2.8.4",
+    "prettier-plugin-organize-imports": "^3.2.2",
+    "prisma": "^4.10.1",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.5.0"
+  }
+}

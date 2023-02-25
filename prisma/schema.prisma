@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        BigInt  @id @default(autoincrement())
+  username  String  @unique
+  password  String
+  createdAt DateTime @default(now())
+  tokens    Token[]
+}
+
+model Token {
+  id        BigInt   @id @default(autoincrement())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  userId    BigInt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Game {
+  id        BigInt   @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user1     BigInt
+  user2     BigInt?
+  board     Json     @default("[[null, null, null], [null, null, null], [null, null, null]]")
+  nextMove  BigInt? // kto ma teraz zagrać
+  status    String   @default("waiting") // waiting, playing, finished
+  winner    BigInt?
+}

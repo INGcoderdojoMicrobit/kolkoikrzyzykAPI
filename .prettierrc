@@ -1,0 +1,8 @@
+{
+  "tabWidth": 2,
+  "useTabs": false,
+  "printWidth": 140,
+  "trailingComma": "none",
+  "pluginSearchDirs": ["./node_modules"],
+  "plugins": ["prettier-plugin-organize-imports"]
+}
