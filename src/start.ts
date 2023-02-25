@@ -19,26 +19,29 @@ app.use(bodyParser.json());
 app.use(async (req, res, next) => {
   req.prisma = prisma;
   if (!req.headers.authorization && !req.query.token) return next();
-  const token = req.headers.authorization || req.query.token;
+  const reqtoken = req.headers.authorization || req.query.token;
 
-  const tokens = await prisma.token.findMany({
+  const tokens = await prisma.token.findMany({ //find latest expiring token
     where: {
-      token: token
-    }
+      token: String(reqtoken)
+    },
+    orderBy: [{
+      expiresAt: 'desc'
+    }]
   });
 
-  if (!tokens[0]) return res.status(401).send("Unauthorized - tnf");
+  if (!tokens[0]) return res.status(401).send("Unauthorized - tnf"); //token not found
 
   if (tokens[0].expiresAt < new Date()) {
-    await prisma.token.delete({
+    await prisma.token.delete({ //token expired - lets delete all entries
       where: {
         id: tokens[0].id
       }
     });
-    return res.status(401).send("Unauthorized - te");
+    return res.status(401).send("Unauthorized - te"); //token expired
   }
 
-  req.user = tokens[0].userId;
+  req.userId = tokens[0].userId;
   req.token = tokens[0].token;
   next();
 });
