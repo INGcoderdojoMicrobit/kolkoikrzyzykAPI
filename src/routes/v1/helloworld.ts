@@ -7,7 +7,7 @@ router.get("/hello", async (req: Request, res: Response) => {
   if (req.userId) {
     const u = await req.prisma.user.findUnique({
       where: {
-        id: req.userId
+        id: BigInt(req.userId.toJSON())
       }
     });
 
