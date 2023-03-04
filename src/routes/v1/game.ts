@@ -7,7 +7,7 @@ router.get("/games", async (req: Request, res: Response) => {
 
   const games = await req.prisma.game.findMany({
     where: {
-      status: "waiting",
+      status: "waiting"
     },
     select: {
       id: true,
@@ -21,6 +21,7 @@ router.get("/games", async (req: Request, res: Response) => {
   res.json(games);
 });
 
+// zakladamy, ze user1 jest "X" a user2 jest "O"
 router.post("/game/create", async (req: Request, res: Response) => {
   if (!req.userId) return res.status(401).send("Game create - Unauthorized");
 
@@ -31,7 +32,7 @@ router.post("/game/create", async (req: Request, res: Response) => {
   });
 
   if (avaliableGames.length > 0) {
-      if (avaliableGames[0].user1==req.userId) return res.status(401).send("Game create - game in waiting state...");
+    if (avaliableGames[0].user1 == req.userId) return res.status(401).send("Game create - game in waiting state...");
 
     const game = await req.prisma.game.update({
       where: {
@@ -55,6 +56,49 @@ router.post("/game/create", async (req: Request, res: Response) => {
   });
 
   res.json(game);
+});
+
+// funkcja zwraca plansze o podany gameid i status gry
+// robimy strefe kibica - kazdy zalogowany moze wyswietlic dowolna plansze
+router.get("/board", async (req: Request, res: Response) => {
+  if (!req.userId) return res.status(401).send("Unauthorized");
+  if (!req.query.gameid) return res.status(401).send("Query board - ngid"); //nie podano ID gry
+
+  const queryboard = await req.prisma.game.findUnique({
+    where: {
+      id: BigInt(req.query.gameid.toString())
+    },
+    select: {
+      board: true,
+      status: true
+    }
+  });
+
+  res.json(queryboard);
+});
+
+// funkcja sprawdza czy moge wykonac ruch w grze gameid
+router.get("/checknextmove", async (req: Request, res: Response) => {
+  if (!req.userId) return res.status(401).send("Unauthorized");
+  if (!req.query.gameid) return res.status(401).send("Query board - ngid"); //nie podano ID gry
+
+  const queryboard = await req.prisma.game.findUnique({
+    where: {
+      id: BigInt(req.query.gameid.toString())
+    },
+    select: {
+      user1: true,
+      user2: true,
+      status: true,
+      nextMove: true
+    }
+  });
+
+  if (!queryboard) return res.status(401).send("Query board - gameid=" + `${req.query.gameid} not found`); //nie ma takiego ID gry
+  if (queryboard.status != "playing") return res.status(401).send("Query board - gameid=" + `${req.query.gameid} not in playing status`); //gra nie jest w trybie "playing"
+  if (queryboard.user1 != req.userId && queryboard.user2 != req.userId)
+    return res.status(401).send("Query board - jestes tylko w strefie kibica"); //gra nie twoja
+  res.json(queryboard.nextMove == req.userId ? true : false);
 });
 
 module.exports = router;
