@@ -41,7 +41,7 @@ router.post("/game/create", async (req: Request, res: Response) => {
       data: {
         user2: BigInt(req.userId.toString()),
         status: "playing",
-        nextMove: BigInt(Math.random() > 0.5 ? avaliableGames[0].user1.toString() : req.userId.toString())
+        nextMove: BigInt(Math.random() > 0.5 ? avaliableGames[0].user1.toString() : req.userId.toString()) //losujemy kto rozpoczyna grę
       }
     });
 
@@ -99,6 +99,100 @@ router.get("/checknextmove", async (req: Request, res: Response) => {
   if (queryboard.user1 != req.userId && queryboard.user2 != req.userId)
     return res.status(401).send("Query board - jestes tylko w strefie kibica"); //gra nie twoja
   res.json(queryboard.nextMove == req.userId ? true : false);
+});
+
+// funkcja sprawdza jaki jest mój symbol w grze gameid
+router.get("/checkmysymbolingame", async (req: Request, res: Response) => {
+  if (!req.userId) return res.status(401).send("Unauthorized");
+  if (!req.query.gameid) return res.status(401).send("Query board - ngid"); //nie podano ID gry
+
+  const queryboard = await req.prisma.game.findUnique({
+    where: {
+      id: BigInt(req.query.gameid.toString())
+    },
+    select: {
+      user1: true,
+      user2: true,
+      status: true,
+      nextMove: true
+    }
+  });
+
+  if (!queryboard) return res.status(401).send("Query board - gameid=" + `${req.query.gameid} not found`); //nie ma takiego ID gry
+  //if (queryboard.status != "playing") return res.status(401).send("Query board - gameid=" + `${req.query.gameid} not in playing status`); gra nie jest w trybie "playing"
+  if (queryboard.user1 != req.userId && queryboard.user2 != req.userId)
+    return res.status(401).send("Query board - jestes tylko w strefie kibica"); //gra nie twoja
+
+  if (queryboard.user1 == req.userId) res.json("X");
+  else if (queryboard.user2 == req.userId) res.json("O");
+  else return res.status(401).send("Query board - jestes tylko w strefie kibica"); //gra nie twoja
+});
+
+// funkcja ruchu w grze - wysyłamy:
+// gameid=
+// row=
+// col=
+// co powoduje wstawienie odpowiedniego symbolu na planszy
+router.post("/move", async (req: Request, res: Response) => {
+  if (!req.userId) return res.status(401).send("Unauthorized");
+  if (!req.query.gameid) return res.status(401).send("Query board - ngid"); //nie podano ID gry
+  if (!req.query.row) return res.status(401).send("Query board - nr"); //nie podano wiersza
+  if (Number(req.query.row) < 0 || Number(req.query.row) > 2) return res.status(401).send("Query board - wr"); //zła wartość wiersza
+  if (!req.query.col) return res.status(401).send("Query board - nc"); //nie podano kolumny
+  if (Number(req.query.col) < 0 || Number(req.query.col) > 2) return res.status(401).send("Query board - wc"); //zła wartość kolumny
+
+  const queryboard = await req.prisma.game.findUnique({
+    where: {
+      id: BigInt(req.query.gameid.toString())
+    },
+    select: {
+      user1: true,
+      user2: true,
+      status: true,
+      nextMove: true,
+      board: true
+    }
+  });
+
+  if (!queryboard) return res.status(401).send("Query board - gameid=" + `${req.query.gameid} not found`); //nie ma takiego ID gry
+  if (queryboard.status != "playing") return res.status(401).send("Query board - gameid=" + `${req.query.gameid} not in playing status`); //gra nie jest w trybie "playing"
+  if (queryboard.user1 != req.userId && queryboard.user2 != req.userId)
+    return res.status(401).send("Query board - jestes tylko w strefie kibica"); //gra nie twoja
+  if (queryboard.nextMove != req.userId) return res.status(401).send("Query board - to nie jest twój ruch"); //ruch przeciwnika
+
+  /*
+                    col
+                1     2     3
+          1 [null, null, null]
+      row  2 [null, null, null]
+          3 [null, null, null]
+      
+      */
+  console.log(queryboard.board);
+
+  if (queryboard.board[Number(req.query.row)][Number(req.query.col)] != null) return res.status(401).send("Query board - błędny ruch"); //pole zajęte
+
+  if (queryboard.user1 == req.userId) {
+    //"X"
+    queryboard.board[Number(req.query.row)][Number(req.query.col)] = "X";
+  } else if (queryboard.user2 == req.userId) {
+    //"O"
+    queryboard.board[Number(req.query.row)][Number(req.query.col)] = "O";
+  }
+
+  console.log(queryboard.board);
+
+  const game = await req.prisma.game.update({
+    where: {
+      id: BigInt(req.query.gameid.toString())
+    },
+    data: {
+      nextMove: queryboard.nextMove == queryboard.user1 ? queryboard.user2 : queryboard.user1,
+      board: queryboard.board
+    }
+  });
+
+  res.json(queryboard.board);
 });
 
 module.exports = router;
