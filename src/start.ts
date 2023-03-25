@@ -30,7 +30,7 @@ app.use(async (req, res, next) => {
     }]
   });
 
-  if (!tokens[0]) return res.status(401).send("Unauthorized - tnf"); //token not found
+  if (!tokens[0]) return res.status(401).send("Unauthorized"); //token not found
 
   if (tokens[0].expiresAt < new Date()) {
     await prisma.token.delete({ //token expired - lets delete all entries
@@ -38,7 +38,7 @@ app.use(async (req, res, next) => {
         id: tokens[0].id
       }
     });
-    return res.status(401).send("Unauthorized - te"); //token expired
+    return res.status(401).send("Unauthorized"); //token expired
   }
 
   req.userId = tokens[0].userId;

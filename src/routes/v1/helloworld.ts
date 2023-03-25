@@ -16,7 +16,7 @@ router.get("/hello", async (req: Request, res: Response) => {
 });
 
 router.get("/me", (req: Request, res: Response) => {
-  if (!req.userId) return res.status(401).send("Me - unauthorized - nup");
+  if (!req.userId) return res.status(401).send("Unauthorized");
 
   res.json({
     user: req.userId
