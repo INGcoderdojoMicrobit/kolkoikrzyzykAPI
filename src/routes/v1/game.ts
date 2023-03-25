@@ -51,11 +51,27 @@ router.post("/game/create", async (req: Request, res: Response) => {
   const game = await req.prisma.game.create({
     data: {
       user1: BigInt(req.userId.toString()),
-      status: "waiting"
+      status: "waiting",
+      board: {
+        create: {
+          row1: ["", "", ""],
+          row2: ["", "", ""],
+          row3: ["", "", ""],
+        },
+      },
+    },
+    select: {
+      id: true,
+      createdAt: true,
+      user1: true,
+      user2: true,
+      status: true,
+      board: true,
+      nextMove: true
     }
   });
 
-  res.json(game);
+  res.send(game);
 });
 
 // funkcja zwraca plansze o podany gameid i status gry
@@ -74,7 +90,7 @@ router.get("/board", async (req: Request, res: Response) => {
     }
   });
 
-  res.json(queryboard);
+  res.send(queryboard);
 });
 
 // funkcja sprawdza czy moge wykonac ruch w grze gameid
@@ -132,7 +148,9 @@ router.get("/checkmysymbolingame", async (req: Request, res: Response) => {
 // gameid=
 // row=
 // col=
-// co powoduje wstawienie odpowiedniego symbolu na planszy
+// co powoduje wstawienie odpowiedniego symbolu na plansz
+
+
 router.post("/move", async (req: Request, res: Response) => {
   if (!req.userId) return res.status(401).send("Unauthorized");
   if (!req.query.gameid) return res.status(401).send("Query board - ngid"); //nie podano ID gry
@@ -150,7 +168,8 @@ router.post("/move", async (req: Request, res: Response) => {
       user2: true,
       status: true,
       nextMove: true,
-      board: true
+      board: true,
+      winner: true
     }
   });
 
@@ -161,38 +180,171 @@ router.post("/move", async (req: Request, res: Response) => {
   if (queryboard.nextMove != req.userId) return res.status(401).send("Query board - to nie jest twój ruch"); //ruch przeciwnika
 
   /*
-                    col
-                1     2     3
-          1 [null, null, null]
-      row  2 [null, null, null]
-          3 [null, null, null]
+          row1: ['', '', '']
+     row  row2: ['', '', '']
+          row3: ['', '', '']
       
       */
   console.log(queryboard.board);
 
-  if (queryboard.board[Number(req.query.row)][Number(req.query.col)] != null) return res.status(401).send("Query board - błędny ruch"); //pole zajęte
+  if (!queryboard.board) return res.status(401).send("Query board - brak planszy"); //brak planszy
+  
+  let row: string[];
+  if(Number(req.query.row) === 0) row = queryboard.board.row1;
+  else if(Number(req.query.row) === 1) row = queryboard.board.row2;
+  else if(Number(req.query.row) === 2) row = queryboard.board.row3;
+  else return res.status(401).send("Query board - brak wiersza"); //brak wiersza
+  
+  if(row[Number(req.query.col)] != '') return res.status(401).send("Query board - pole zajęte"); //pole zajęte
 
-  if (queryboard.user1 == req.userId) {
-    //"X"
-    queryboard.board[Number(req.query.row)][Number(req.query.col)] = "X";
-  } else if (queryboard.user2 == req.userId) {
-    //"O"
-    queryboard.board[Number(req.query.row)][Number(req.query.col)] = "O";
-  }
+  if (queryboard.user1 == req.userId) row[Number(req.query.col)] = "X"; 
+  else if (queryboard.user2 == req.userId) row[Number(req.query.col)] = "O";
 
   console.log(queryboard.board);
 
-  const game = await req.prisma.game.update({
+  const updateboard = await req.prisma.board.update({
+    where: {
+      id: queryboard.board.id
+    },
+    data: {
+      row1: Number(req.query.row) === 0 ? row : queryboard.board.row1,
+      row2: Number(req.query.row) === 1 ? row : queryboard.board.row2,
+      row3: Number(req.query.row) === 2 ? row : queryboard.board.row3
+    },
+    select: {
+      row1: true,
+      row2: true,
+      row3: true
+    }
+  });
+
+  console.log(updateboard);
+
+  let kolko = false;
+  let krzyzyk = false;
+
+  if (queryboard.board.row1[0] === "O" && queryboard.board.row1[1] === "O" && queryboard.board.row1[2] === "O") 
+  {
+    kolko = true;
+    console.log("pierwszy wiersz pełny O");
+  }
+  if (queryboard.board.row2[0] === "O" && queryboard.board.row2[1] === "O" && queryboard.board.row2[2] === "O") 
+  {
+    kolko = true;
+    console.log("drugi wiersz pełny O");
+  }
+  if (queryboard.board.row3[0] === "O" && queryboard.board.row3[1] === "O" && queryboard.board.row3[2] === "O") 
+  {
+    kolko = true;
+    console.log("trzeci wiersz pełny O");
+  }
+  if (queryboard.board.row1[0] === "O" && queryboard.board.row2[0] === "O" && queryboard.board.row3[0] === "O") 
+  {
+    kolko = true;
+    console.log("pierwsza kolumna pełna O");
+  }
+  if (queryboard.board.row1[1] === "O" && queryboard.board.row2[1] === "O" && queryboard.board.row3[1] === "O") 
+  {
+    kolko = true;
+    console.log("druga kolumna pełna O");
+  }
+  if (queryboard.board.row1[2] === "O" && queryboard.board.row2[2] === "O" && queryboard.board.row3[2] === "O") 
+  {
+    kolko = true;
+    console.log("trzecia kolumna pełna O");
+  }
+  if (queryboard.board.row1[0] === "O" && queryboard.board.row2[1] === "O" && queryboard.board.row3[2] === "O") 
+  {
+    kolko = true;
+    console.log("lewo w dol prawo pełna O");
+  }
+  if (queryboard.board.row1[2] === "O" && queryboard.board.row2[1] === "O" && queryboard.board.row3[0] === "O") 
+  {
+    kolko = true;
+    console.log("lewo w gore prawo pełna O");
+  }
+
+// to samo sprawdzenie dla krzyzyka
+  if (queryboard.board.row1[0] === "X" && queryboard.board.row1[1] === "X" && queryboard.board.row1[2] === "X") 
+  {
+    krzyzyk = true;
+    console.log("pierwszy wiersz pełny X");
+  }
+  if (queryboard.board.row2[0] === "X" && queryboard.board.row2[1] === "X" && queryboard.board.row2[2] === "X") 
+  {
+    krzyzyk = true;
+    console.log("drugi wiersz pełny X");
+  }
+  if (queryboard.board.row3[0] === "X" && queryboard.board.row3[1] === "X" && queryboard.board.row3[2] === "X") 
+  {
+    krzyzyk = true;
+    console.log("trzeci wiersz pełny X");
+  }
+  if (queryboard.board.row1[0] === "X" && queryboard.board.row2[0] === "X" && queryboard.board.row3[0] === "X") 
+  {
+    krzyzyk = true;
+    console.log("pierwsza kolumna pełna X");
+  }
+  if (queryboard.board.row1[1] === "X" && queryboard.board.row2[1] === "X" && queryboard.board.row3[1] === "X") 
+  {
+    krzyzyk = true;
+    console.log("druga kolumna pełna X");
+  }
+  if (queryboard.board.row1[2] === "X" && queryboard.board.row2[2] === "X" && queryboard.board.row3[2] === "X") 
+  {
+    krzyzyk = true;
+    console.log("trzecia kolumna pełna X");
+  }
+  if (queryboard.board.row1[0] === "X" && queryboard.board.row2[1] === "X" && queryboard.board.row3[2] === "X") 
+  {
+    krzyzyk = true;
+    console.log("lewo w dol prawo pełna X");
+  }
+  if (queryboard.board.row1[2] === "X" && queryboard.board.row2[1] === "X" && queryboard.board.row3[0] === "X") 
+  {
+    krzyzyk = true;
+    console.log("lewo w gore prawo pełna X");
+  }
+
+  if (kolko || krzyzyk) 
+  {
+    queryboard.status = 'won';
+  }
+
+  if (kolko) 
+  {
+    queryboard.winner = queryboard.user2;
+  }
+
+  if (krzyzyk) 
+  {
+    queryboard.winner = queryboard.user1;
+  }
+  
+
+  const gameupdate = await req.prisma.game.update({
     where: {
       id: BigInt(req.query.gameid.toString())
     },
     data: {
       nextMove: queryboard.nextMove == queryboard.user1 ? queryboard.user2 : queryboard.user1,
-      board: queryboard.board
+      status: queryboard.status,
+      winner: queryboard.winner
+    },
+    select:{
+      id: true,
+      board: true,
+      winner: true,
+      user1: true,
+      user2: true,
+      createdAt: true,
+      updatedAt: true,
+      status: true,
     }
   });
 
-  res.json(queryboard.board);
+  console.log(gameupdate);
+  res.json(gameupdate);
 });
 
 module.exports = router;

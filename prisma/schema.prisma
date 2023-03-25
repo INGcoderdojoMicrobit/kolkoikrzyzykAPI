@@ -32,8 +32,17 @@ model Game {
   updatedAt DateTime @updatedAt
   user1     BigInt
   user2     BigInt?
-  board     Json     @default("[[null, null, null], [null, null, null], [null, null, null]]")
   nextMove  BigInt?
   status    String   @default("waiting")
   winner    BigInt?
+  board     Board?  
+}
+
+model Board {
+  id        BigInt   @id @default(autoincrement())
+  gameId    BigInt    @unique
+  game      Game     @relation(fields: [gameId], references: [id])
+  row1      String[] @default(["", "", ""])
+  row2      String[] @default(["", "", ""])
+  row3      String[] @default(["", "", ""])
 }
