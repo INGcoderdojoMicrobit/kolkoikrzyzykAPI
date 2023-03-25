@@ -6,7 +6,6 @@ const router = Router();
 router.post("/account/register", async (req: Request, res: Response) => {
   if (!req.body.username || !req.body.password) return res.status(400).send("Bad request");
 
-  console.log("Register - szukam usera: " + `${req.body.username}` + " w bazie");
   const user = await req.prisma.user.findUnique({
     where: {
       username: req.body.username
@@ -34,7 +33,6 @@ router.post("/account/register", async (req: Request, res: Response) => {
 router.put("/account/setpass", async (req: Request, res: Response) => {
   if (!req.body.username || !req.body.oldpassword || !req.body.newpassword) return res.status(400).send("Bad request");
 
-  console.log("Setpass - szukam usera: " + `${req.body.username}` + " w bazie");
   const user = await req.prisma.user.findUnique({
     where: {
       username: req.body.username

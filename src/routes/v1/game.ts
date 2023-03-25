@@ -184,7 +184,6 @@ router.post("/move", async (req: Request, res: Response) => {
           row3: ['', '', '']
       
       */
-  console.log(queryboard.board);
 
   if (!queryboard.board) return res.status(401).send("Query board - brak planszy"); //brak planszy
   
@@ -199,110 +198,74 @@ router.post("/move", async (req: Request, res: Response) => {
   if (queryboard.user1 == req.userId) row[Number(req.query.col)] = "X"; 
   else if (queryboard.user2 == req.userId) row[Number(req.query.col)] = "O";
 
-  console.log(queryboard.board);
-
-  const updateboard = await req.prisma.board.update({
-    where: {
-      id: queryboard.board.id
-    },
-    data: {
-      row1: Number(req.query.row) === 0 ? row : queryboard.board.row1,
-      row2: Number(req.query.row) === 1 ? row : queryboard.board.row2,
-      row3: Number(req.query.row) === 2 ? row : queryboard.board.row3
-    },
-    select: {
-      row1: true,
-      row2: true,
-      row3: true
-    }
-  });
-
-  console.log(updateboard);
-
   let kolko = false;
   let krzyzyk = false;
 
   if (queryboard.board.row1[0] === "O" && queryboard.board.row1[1] === "O" && queryboard.board.row1[2] === "O") 
   {
     kolko = true;
-    console.log("pierwszy wiersz pełny O");
   }
   if (queryboard.board.row2[0] === "O" && queryboard.board.row2[1] === "O" && queryboard.board.row2[2] === "O") 
   {
     kolko = true;
-    console.log("drugi wiersz pełny O");
   }
   if (queryboard.board.row3[0] === "O" && queryboard.board.row3[1] === "O" && queryboard.board.row3[2] === "O") 
   {
     kolko = true;
-    console.log("trzeci wiersz pełny O");
   }
   if (queryboard.board.row1[0] === "O" && queryboard.board.row2[0] === "O" && queryboard.board.row3[0] === "O") 
   {
     kolko = true;
-    console.log("pierwsza kolumna pełna O");
   }
   if (queryboard.board.row1[1] === "O" && queryboard.board.row2[1] === "O" && queryboard.board.row3[1] === "O") 
   {
     kolko = true;
-    console.log("druga kolumna pełna O");
   }
   if (queryboard.board.row1[2] === "O" && queryboard.board.row2[2] === "O" && queryboard.board.row3[2] === "O") 
   {
     kolko = true;
-    console.log("trzecia kolumna pełna O");
   }
   if (queryboard.board.row1[0] === "O" && queryboard.board.row2[1] === "O" && queryboard.board.row3[2] === "O") 
   {
     kolko = true;
-    console.log("lewo w dol prawo pełna O");
   }
   if (queryboard.board.row1[2] === "O" && queryboard.board.row2[1] === "O" && queryboard.board.row3[0] === "O") 
   {
     kolko = true;
-    console.log("lewo w gore prawo pełna O");
   }
 
 // to samo sprawdzenie dla krzyzyka
   if (queryboard.board.row1[0] === "X" && queryboard.board.row1[1] === "X" && queryboard.board.row1[2] === "X") 
   {
     krzyzyk = true;
-    console.log("pierwszy wiersz pełny X");
   }
   if (queryboard.board.row2[0] === "X" && queryboard.board.row2[1] === "X" && queryboard.board.row2[2] === "X") 
   {
     krzyzyk = true;
-    console.log("drugi wiersz pełny X");
   }
   if (queryboard.board.row3[0] === "X" && queryboard.board.row3[1] === "X" && queryboard.board.row3[2] === "X") 
   {
     krzyzyk = true;
-    console.log("trzeci wiersz pełny X");
   }
   if (queryboard.board.row1[0] === "X" && queryboard.board.row2[0] === "X" && queryboard.board.row3[0] === "X") 
   {
     krzyzyk = true;
-    console.log("pierwsza kolumna pełna X");
   }
   if (queryboard.board.row1[1] === "X" && queryboard.board.row2[1] === "X" && queryboard.board.row3[1] === "X") 
   {
     krzyzyk = true;
-    console.log("druga kolumna pełna X");
   }
   if (queryboard.board.row1[2] === "X" && queryboard.board.row2[2] === "X" && queryboard.board.row3[2] === "X") 
   {
     krzyzyk = true;
-    console.log("trzecia kolumna pełna X");
   }
   if (queryboard.board.row1[0] === "X" && queryboard.board.row2[1] === "X" && queryboard.board.row3[2] === "X") 
   {
     krzyzyk = true;
-    console.log("lewo w dol prawo pełna X");
   }
   if (queryboard.board.row1[2] === "X" && queryboard.board.row2[1] === "X" && queryboard.board.row3[0] === "X") 
   {
     krzyzyk = true;
-    console.log("lewo w gore prawo pełna X");
   }
 
   if (kolko || krzyzyk) 
@@ -342,7 +305,6 @@ router.post("/move", async (req: Request, res: Response) => {
     }
   });
 
-  console.log(gameupdate);
   res.json(gameupdate);
 });
 
