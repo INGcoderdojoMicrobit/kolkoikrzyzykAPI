@@ -4,9 +4,8 @@ import { Request, Response, Router } from "express";
 const router = Router();
 
 router.post("/account/register", async (req: Request, res: Response) => {
-  if (!req.body.username || !req.body.password) return res.status(400).send("Bad request - nu or np");
+  if (!req.body.username || !req.body.password) return res.status(400).send("Bad request");
 
-  console.log("Register - szukam usera: " + `${req.body.username}` + " w bazie");
   const user = await req.prisma.user.findUnique({
     where: {
       username: req.body.username
@@ -32,9 +31,8 @@ router.post("/account/register", async (req: Request, res: Response) => {
 });
 
 router.put("/account/setpass", async (req: Request, res: Response) => {
-  if (!req.body.username || !req.body.oldpassword || !req.body.newpassword) return res.status(400).send("Bad request - nu or nop or nnp");
+  if (!req.body.username || !req.body.oldpassword || !req.body.newpassword) return res.status(400).send("Bad request");
 
-  console.log("Setpass - szukam usera: " + `${req.body.username}` + " w bazie");
   const user = await req.prisma.user.findUnique({
     where: {
       username: req.body.username
@@ -67,7 +65,7 @@ router.put("/account/setpass", async (req: Request, res: Response) => {
 
 // for login - use NPA token: w4arok97tps
 router.post("/account/login", async (req: Request, res: Response) => {
-  if (!req.body.username || !req.body.password) return res.status(400).send("Login - bad request");
+  if (!req.body.username || !req.body.password) return res.status(400).send("Bad request");
 
   const user = await req.prisma.user.findUnique({
     where: {
@@ -98,7 +96,7 @@ router.post("/account/login", async (req: Request, res: Response) => {
 });
 
 router.post("/account/logout", async (req: Request, res: Response) => {
-  if (!req.token) return res.status(401).send("Logout - Unauthorized");
+  if (!req.token) return res.status(401).send("Unauthorized");
 
   await req.prisma.token.delete({
     where: {
