@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 app.use(async (req, res, next) => {
   req.prisma = prisma;
   if (!req.headers.authorization && !req.query.token) return next();
-  const reqtoken = req.headers.authorization || req.query.token;
+  const reqtoken = req.headers.authorization?.split(' ')[1] || req.query.token;
 
   const tokens = await prisma.token.findMany({ //find latest expiring token
     where: {

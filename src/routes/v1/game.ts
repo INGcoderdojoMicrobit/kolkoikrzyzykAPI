@@ -197,6 +197,24 @@ router.post("/move", async (req: Request, res: Response) => {
   if (queryboard.user1 == req.userId) row[Number(req.query.col)] = "X";
   else if (queryboard.user2 == req.userId) row[Number(req.query.col)] = "O";
 
+  const updateboard = await req.prisma.board.update({
+    where: {
+      id: queryboard.board.id
+    },
+    data: {
+      row1: Number(req.query.row) === 0 ? row : queryboard.board.row1,
+      row2: Number(req.query.row) === 1 ? row : queryboard.board.row2,
+      row3: Number(req.query.row) === 2 ? row : queryboard.board.row3
+    },
+    select: {
+      row1: true,
+      row2: true,
+      row3: true
+    }
+  });
+
+  console.log(updateboard);
+
   let kolko = false;
   let krzyzyk = false;
 
@@ -267,6 +285,18 @@ router.post("/move", async (req: Request, res: Response) => {
     console.log("lewo w gore prawo pełna X");
   }
 
+  let full=true;
+  for(let y=0;y<3;y++)
+  {
+    if (queryboard.board.row1[y] === "") full=false;
+    if (queryboard.board.row2[y] === "") full=false;
+    if (queryboard.board.row3[y] === "") full=false;
+  }
+
+  if (full) {
+    queryboard.status = "draw";
+  }
+
   if (kolko || krzyzyk) {
     queryboard.status = "won";
   }
@@ -278,6 +308,8 @@ router.post("/move", async (req: Request, res: Response) => {
   if (krzyzyk) {
     queryboard.winner = queryboard.user1;
   }
+
+  
 
   const gameupdate = await req.prisma.game.update({
     where: {
@@ -475,7 +507,7 @@ function minimax(node: TreeNode, shouldMax: Boolean, depth: number) {
   }
 }*/
 
-function minimax(node: TreeNode, shouldMax: boolean, depth: number): TreeNode {
+const minimax = (node: TreeNode, shouldMax: boolean, depth: number): TreeNode => {
   if (node.children.length === 0) {
     //console.log(`Nie ma już dzieci - jest listek, głębokość ${depth} !`);
     if (depth === 0) {
@@ -488,10 +520,10 @@ function minimax(node: TreeNode, shouldMax: boolean, depth: number): TreeNode {
 
     switch (whoWon) {
       case "X":
-        node.value = Number.NEGATIVE_INFINITY;
+        node.value = -1000;
         break;
       case "O":
-        node.value = Number.POSITIVE_INFINITY;
+        node.value = 1000;
         break;
       default:
         node.value = 0;
@@ -502,16 +534,20 @@ function minimax(node: TreeNode, shouldMax: boolean, depth: number): TreeNode {
   }
 
   let foundNode: TreeNode = node; // w teorii może być tak, że nie znajdziemy żadnego dziecka, więc zwracamy node
-  let value = shouldMax ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+  let value = shouldMax ? -1000 : 1000;
   for (const child of node.children) {
     const childValue = minimax(child, !shouldMax, depth++).value;
 
-    if (shouldMax) {
+    //if (childValue == -1000 || childValue == 1000 )
+    //{
+    //  console.log(`Wartość liścia ${childValue}`)
+    //}
+
       if (childValue > value) {
         value = childValue;
         foundNode = child;
       }
-    } else {
+     else {
       if (childValue < value) {
         value = childValue;
         foundNode = child;
@@ -524,7 +560,7 @@ function minimax(node: TreeNode, shouldMax: boolean, depth: number): TreeNode {
 
 let nodeCount = 0;
 
-function generateNextMoves(node: TreeNode, player: string) {
+const generateNextMoves = (node: TreeNode, player: string) => {
   const nextPlayer = player === "X" ? "O" : "X";
   const nextMoves = [];
   for (let x = 0; x < 3; x++) {
@@ -538,6 +574,11 @@ function generateNextMoves(node: TreeNode, player: string) {
   }
   
   for (const move of nextMoves) {
+    //logika sprawdzenia czy wygraliśmy
+    const whoWon = hasGameEnded(move.board[0], move.board[1], move.board[2]);
+    if (whoWon == "X") move.value = 1000;
+    if (whoWon == "O") move.value = -1000;
+    if (whoWon == "") move.value = 0;
     node.children.push(move);
   }
 
@@ -697,7 +738,9 @@ router.get("/minmaxmove", async (req: Request, res: Response) => {
   let y1 = 0;
 
   console.log(queryboard);
-  res.send("proponowany ruch: " + `[${x1}],[${y1}] ewentualnie wyliczony ->${jakiruch}<- wyszedł`);
+  res.send({
+    result:{row: jakiruch?.charAt(0), column: jakiruch?.charAt(2)}
+  });
 });
 
 module.exports = router;
