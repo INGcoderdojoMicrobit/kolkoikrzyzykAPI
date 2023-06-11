@@ -13,6 +13,15 @@
       <form name="ListGamesForm" action="" method="GET">
         List existing games you just started and waiting for someone to join (login required): <br>
         <input type="button" name="button" value="List games" onClick="listgamesResults(this.form)">
+        <br>
+        <br>
+          <table id="lista_gier" style="width: 300" BORDER="1">
+            <th style="width: 30; height: 30" align="center" bgcolor="silver">ID</th>
+            <th style="width: 90; height: 30" align="center" bgcolor="silver">Status</th>
+            <th style="width: 30; height: 30" align="center" bgcolor="silver">Player1</th>
+            <th style="width: 30; height: 30" align="center" bgcolor="silver">Player2</th>
+            <th style="width: 30; height: 30" align="center" bgcolor="silver">Akcja</th>
+        </table>
       </form>
     <hr>
       <form name="CreateGameForm" action="" method="POST">
@@ -21,9 +30,10 @@
       </form>
     <hr>
       <form name="GetBoardForm" action="" method="GET">
-        Get board => token for login, game id: <br>
+        Get board <!-- => token for login, game id: <br>
         <input type="text" name="gameidinputbox" value="13">
         <input type="button" name="button" value="Get game" onClick="getboardResults(this.form)">
+        -->
         <div>
             <br>
             <table id="tabelka" style="width: 200" BORDER="1">
@@ -49,8 +59,21 @@
                 <td style="width: 30; height: 30" align="center"> </td>
                 <td style="width: 30; height: 30" align="center"> </td>
               </tr>
+              <tr>
+                <td colspan="4" align="center" ><label id="game_status"></label></td>
+              </tr>
+              <tr>
+                <td colspan="4" align="center" ><label id="user1_label"></label></td>
+              </tr>
+              <tr>
+                <td colspan="4" align="center" ><label id="user2_label"></label></td>
+              </tr>
+              <tr>
+                <td colspan="4" align="center" ><label id="nextmove_label"></label></td>
+              </tr>
             </table>
-          </div>    
+          </div>
+          
       </form>
       <hr>
       <br>
@@ -96,14 +119,55 @@
                         Authorization: 'Bearer ' + token //the token is a variable which holds the token
                     }})
                 
-                .then(response =>{console.log(response.data);})
+                .then(response =>{console.log(response.data);
+                  console.log(response.data.length);
+                  for(var i=0; i<response.data.length; i++){
+                    console.log(response.data[i].id);
+                  }
+                  var table = document.getElementById('lista_gier');
+                  var rowCount = table.rows.length;
+                  var cellCount = table.rows[0].cells.length;
+                  for(var i=rowCount-1; i>0; i--){
+                    table.deleteRow(i);
+                  } 
+                  for(var i=0; i<response.data.length; i++){
+                    var row = table.insertRow(i+1);
+                    var cell = row.insertCell(0);
+                    cell.innerText = response.data[i].id;
+                    cell.style.textAlign = "center";
+                    cell = row.insertCell(1);
+                    cell.innerText = response.data[i].status;
+                    cell.style.textAlign = "center";
+                    cell = row.insertCell(2);
+                    cell.innerText = response.data[i].user1;
+                    cell.style.textAlign = "center";
+                    cell = row.insertCell(3);
+                    cell.innerText = response.data[i].user2;
+                    cell.style.textAlign = "center";
+                    if(response.data[i].status == "playing"){
+                      cell = row.insertCell(4);
+                      cell.innerHTML = '<input id="Button" type=\"button\" value="Graj!" onClick=\"getboardResults('+response.data[i].id+','+response.data[i].user1+','+response.data[i].user2+',\''+response.data[i].status+'\')"/>';
+                      console.log(cell.innerHTML);
+                    }
+                    else {
+                      cell = row.insertCell(4);
+                      cell.innerText="";
+                      cell.style.textAlign = "center";
+                    }
+                  }
+                
+                
+                })
                 .catch(error =>{console.error(error)});
                 }
     
-            function getboardResults (form) {
+            function getboardResults (i_gameid, i_user1, i_user2, i_status) {
+
+
+            
                 
                 const token = loginForm.tokeninputbox.value;
-                const gameid = form.gameidinputbox.value;
+                const gameid = i_gameid;
                 axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/board?gameid="+gameid, {
                     headers: {
                         Authorization: 'Bearer ' + token //the token is a variable which holds the token
@@ -121,6 +185,23 @@
                     table.rows[3].cells[1].innerHTML = response.data.board.row3[0];
                     table.rows[3].cells[2].innerHTML = response.data.board.row3[1];
                     table.rows[3].cells[3].innerHTML = response.data.board.row3[2];
+                    var x = document.getElementById("game_status");  
+                    x.innerText="Status: " + response.data.status;
+                    x = document.getElementById("user1_label");  
+                    x.innerText="Player1: " + i_user1;
+                    x = document.getElementById("user2_label");  
+                    x.innerText="Player2: " + i_user2;
+                })
+                .catch(error =>{console.error(error)});
+
+                axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/checknextmove?gameid="+gameid, {
+                    headers: {
+                        Authorization: 'Bearer ' + token //the token is a variable which holds the token
+                    }})
+                
+                .then(response =>{console.log(response.data);
+                    var x = document.getElementById("nextmove_label");  
+                    x.innerText="Twój ruch? " + (response.data == true ? "TAK" : "NIE");
                 })
                 .catch(error =>{console.error(error)});
                 }
