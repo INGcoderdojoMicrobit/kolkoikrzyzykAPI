@@ -15,12 +15,12 @@
         <input type="button" name="button" value="List games" onClick="listgamesResults(this.form)">
         <br>
         <br>
-          <table id="lista_gier" style="width: 300" BORDER="1">
+          <table id="lista_gier" style="width: 350" BORDER="1">
             <th style="width: 30; height: 30" align="center" bgcolor="silver">ID</th>
-            <th style="width: 90; height: 30" align="center" bgcolor="silver">Status</th>
+            <th style="width: 70; height: 30" align="center" bgcolor="silver">Status</th>
             <th style="width: 30; height: 30" align="center" bgcolor="silver">Player1</th>
             <th style="width: 30; height: 30" align="center" bgcolor="silver">Player2</th>
-            <th style="width: 30; height: 30" align="center" bgcolor="silver">Akcja</th>
+            <th style="width: 40; height: 30" align="center" bgcolor="silver">Akcja</th>
         </table>
       </form>
     <hr>
@@ -43,7 +43,7 @@
                 <th style="width: 30; height: 30" align="center" bgcolor="silver">2</th>
               <tr>
                 <th bgcolor="silver">0</th>
-                <td style="width: 30; height: 30" align="center" > </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange'" onmouseout="style.backgroundColor ='white'"> </td>
                 <td style="width: 30; height: 30" align="center" > </td>
                 <td style="width: 30; height: 30" align="center" > </td>
               </tr>
@@ -146,6 +146,7 @@
                     cell.style.textAlign = "center";
                     if(response.data[i].status == "playing"){
                       cell = row.insertCell(4);
+                      cell.style.textAlign = "center";
                       cell.innerHTML = '<input id="Button" type=\"button\" value="Graj!" onClick=\"getboardResults('+response.data[i].id+','+response.data[i].user1+','+response.data[i].user2+',\''+response.data[i].status+'\')"/>';
                       console.log(cell.innerHTML);
                     }
@@ -202,9 +203,26 @@
                 .then(response =>{console.log(response.data);
                     var x = document.getElementById("nextmove_label");  
                     x.innerText="Twój ruch? " + (response.data == true ? "TAK" : "NIE");
+                    if (response.data == true) callJakaGramFigura(token, gameid);
                 })
                 .catch(error =>{console.error(error)});
                 }
+
+            function callJakaGramFigura(token, gameid){
+                console.log("sprawdzam figure");
+                axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/checkmysymbolingame?gameid="+gameid, {
+                    headers: {
+                        Authorization: 'Bearer ' + token //the token is a variable which holds the token
+                    }})
+                
+                .then(response =>{console.log(response.data);
+                    var x = document.getElementById("nextmove_label");  
+                    x.innerText=x.innerText + "("+ response.data+")";})
+                .catch(error =>{console.error(error)});
+            }
+            
+
+
             function testResults (form) {
                 
             //axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/hello")
