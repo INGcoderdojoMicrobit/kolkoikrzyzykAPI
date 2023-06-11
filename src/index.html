@@ -1,0 +1,166 @@
+<body>
+
+    <p id="demo">Gramy w kółko i krzyżyk?</p>
+    <form name="loginForm" action="" method="PUT">
+        Provide username & password: <br>
+        <input type="text" name="user_inputbox" value="adamg">
+        <input type="password" name="password_inputbox" value="alamakota1">
+        <input type="button" name="button" value="Login" onClick="loginResults(this.form)"> 
+        ==> Token: 
+        <input type="password" name="tokeninputbox" value="xp0jeffwml"> <label id="password_label"> </label>
+      </form>
+      <hr>
+      <form name="ListGamesForm" action="" method="GET">
+        List existing games you just started and waiting for someone to join (login required): <br>
+        <input type="button" name="button" value="List games" onClick="listgamesResults(this.form)">
+      </form>
+    <hr>
+      <form name="CreateGameForm" action="" method="POST">
+        Create Game or join the existing game (login required): <br>
+        <input type="button" name="button" value="Create" onClick="creategameResults(this.form)">
+      </form>
+    <hr>
+      <form name="GetBoardForm" action="" method="GET">
+        Get board => token for login, game id: <br>
+        <input type="text" name="gameidinputbox" value="13">
+        <input type="button" name="button" value="Get game" onClick="getboardResults(this.form)">
+        <div>
+            <br>
+            <table id="tabelka" style="width: 200" BORDER="1">
+                <th style="width: 30; height: 30" align="center" bgcolor="silver">R\C</th>
+                <th style="width: 30; height: 30" align="center" bgcolor="silver">0</th>
+                <th style="width: 30; height: 30" align="center" bgcolor="silver">1</th>
+                <th style="width: 30; height: 30" align="center" bgcolor="silver">2</th>
+              <tr>
+                <th bgcolor="silver">0</th>
+                <td style="width: 30; height: 30" align="center" > </td>
+                <td style="width: 30; height: 30" align="center" > </td>
+                <td style="width: 30; height: 30" align="center" > </td>
+              </tr>
+              <tr>
+                <th bgcolor="silver">1</th>
+                <td style="width: 30; height: 30" align="center"> </td>
+                <td style="width: 30; height: 30" align="center"> </td>
+                <td style="width: 30; height: 30" align="center"> </td>
+              </tr>
+              <tr>
+                <th bgcolor="silver">2</th>
+                <td style="width: 30; height: 30" align="center"> </td>
+                <td style="width: 30; height: 30" align="center"> </td>
+                <td style="width: 30; height: 30" align="center"> </td>
+              </tr>
+            </table>
+          </div>    
+      </form>
+      <hr>
+      <br>
+      <form name="myForm" action="" method="GET">
+        Token for login: <br>
+        <input type="text" name="tokeninputbox" value="xp0jeffwml">
+        <input type="button" name="button" value="Click" onClick="testResults(this.form)">
+      </form>
+    
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script>
+
+            function loginResults (form) {
+                const user = loginForm.user_inputbox.value;
+                const password = form.password_inputbox.value;
+                axios.post("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/account/login?", {
+                     username: `${user}`, password:`${password}` })                
+                .then(response =>{console.log(response.data.token);loginForm.tokeninputbox.value=response.data.token;
+                    var x = document.getElementById("password_label");  
+                    x.innerText="Pobrano token :-)"})
+                .catch(error =>{console.error(error)});
+                }
+
+
+            function creategameResults (form) {
+                const token = loginForm.tokeninputbox.value;
+                
+                axios.post("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/game/create", {} ,
+                    {
+                    headers: {
+                        Authorization: 'Bearer ' + token //the token is a variable which holds the token
+                    }})
+                
+                .then(response =>{console.log(response.data);})
+                .catch(error =>{console.error(error)});
+                }
+
+            function listgamesResults (form) {
+                
+                const token = loginForm.tokeninputbox.value;
+                axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/games", {
+                    headers: {
+                        Authorization: 'Bearer ' + token //the token is a variable which holds the token
+                    }})
+                
+                .then(response =>{console.log(response.data);})
+                .catch(error =>{console.error(error)});
+                }
+    
+            function getboardResults (form) {
+                
+                const token = loginForm.tokeninputbox.value;
+                const gameid = form.gameidinputbox.value;
+                axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/board?gameid="+gameid, {
+                    headers: {
+                        Authorization: 'Bearer ' + token //the token is a variable which holds the token
+                    }})
+                
+                .then(response =>{console.log(response.data);
+                    //var table = form.tabelka;
+                    var table = document.getElementById('tabelka');                                        
+                    table.rows[1].cells[1].innerHTML = response.data.board.row1[0];
+                    table.rows[1].cells[2].innerHTML = response.data.board.row1[1];
+                    table.rows[1].cells[3].innerHTML = response.data.board.row1[2];
+                    table.rows[2].cells[1].innerHTML = response.data.board.row2[0];
+                    table.rows[2].cells[2].innerHTML = response.data.board.row2[1];
+                    table.rows[2].cells[3].innerHTML = response.data.board.row2[2];
+                    table.rows[3].cells[1].innerHTML = response.data.board.row3[0];
+                    table.rows[3].cells[2].innerHTML = response.data.board.row3[1];
+                    table.rows[3].cells[3].innerHTML = response.data.board.row3[2];
+                })
+                .catch(error =>{console.error(error)});
+                }
+            function testResults (form) {
+                
+            //axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/hello")
+            const token = form.tokeninputbox.value;
+            axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/board?gameid=13", {data: null ,
+                headers: {
+                    Authorization: 'Bearer ' + token //the token is a variable which holds the token
+                }})
+            
+            .then(response =>{console.log(response.data);})
+            .catch(error =>{console.error(error)});
+            }
+    //    const axios = require('axios/dist/browser/axios.cjs');
+
+
+/*
+        const xhr = new XMLHttpRequest();
+        //xhr.open("POST", "https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/move?gameid=13&row=2&col=2");
+        xhr.open("GET", "https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/hello");
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        const body = JSON.stringify({
+            gameid: "13",
+            row: "2",
+            col: "2",
+        });
+        xhr.send(body);
+        xhr.onload = () => {
+        if (xhr.readyState == 4 && xhr.status == 201) {
+            alert(JSON.parse(xhr.responseText));
+        } else {
+            alert(`Error: ${xhr.status}`);
+        }
+        };
+        
+        let d = new Date();
+        //alert("Today's date is " + d);
+        */
+    </script>
+    
+</body>

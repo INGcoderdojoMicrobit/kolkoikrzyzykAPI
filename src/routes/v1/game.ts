@@ -3,11 +3,14 @@ import { Request, Response, Router } from "express";
 const router = Router();
 
 router.get("/games", async (req: Request, res: Response) => {
-  if (!req.userId) return res.status(401).send("Unauthorized");
+  if (!req.userId) return res.status(401).send("Unauthorized - nup");
 
   const games = await req.prisma.game.findMany({
     where: {
-      status: "waiting"
+      AND: [
+        {OR: [{user1: BigInt(req.userId.toString())}, {user2: BigInt(req.userId.toString())}],},
+        {OR: [{status: "waiting"}, {status: "playing"}],}
+      ]
     },
     select: {
       id: true,
@@ -23,7 +26,7 @@ router.get("/games", async (req: Request, res: Response) => {
 
 // zakladamy, ze user1 jest "X" a user2 jest "O"
 router.post("/game/create", async (req: Request, res: Response) => {
-  if (!req.userId) return res.status(401).send("Unauthorized");
+  if (!req.userId) return res.status(401).send("Unauthorized - nup");
 
   const avaliableGames = await req.prisma.game.findMany({
     where: {

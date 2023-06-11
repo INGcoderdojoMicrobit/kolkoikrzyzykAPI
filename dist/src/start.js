@@ -14,11 +14,17 @@ const app = (0, express_1.default)();
 app.disable("x-powered-by");
 app.disable("etag");
 app.use(body_parser_1.default.json());
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT');
+    res.header('Access-Control-Allow-Headers', '*');
+    next();
+});
 app.use(async (req, res, next) => {
     req.prisma = prisma;
     if (!req.headers.authorization && !req.query.token)
         return next();
-    const reqtoken = req.headers.authorization || req.query.token;
+    const reqtoken = req.headers.authorization?.split(' ')[1] || req.query.token;
     const tokens = await prisma.token.findMany({
         where: {
             token: String(reqtoken)

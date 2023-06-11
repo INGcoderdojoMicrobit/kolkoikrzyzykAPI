@@ -16,6 +16,13 @@ app.disable("x-powered-by");
 app.disable("etag");
 app.use(bodyParser.json());
 
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT');
+  res.header('Access-Control-Allow-Headers','*');
+  next();
+});
+
 app.use(async (req, res, next) => {
   req.prisma = prisma;
   if (!req.headers.authorization && !req.query.token) return next();
@@ -30,7 +37,7 @@ app.use(async (req, res, next) => {
     }]
   });
 
-  if (!tokens[0]) return res.status(401).send("Unauthorized"); //token not found
+  if (!tokens[0]) return res.status(401).send("Unauthorized - tnf"); //token not found
 
   if (tokens[0].expiresAt < new Date()) {
     await prisma.token.delete({ //token expired - lets delete all entries
@@ -38,7 +45,7 @@ app.use(async (req, res, next) => {
         id: tokens[0].id
       }
     });
-    return res.status(401).send("Unauthorized"); //token expired
+    return res.status(401).send("Unauthorized - te"); //token expired
   }
 
   req.userId = tokens[0].userId;
