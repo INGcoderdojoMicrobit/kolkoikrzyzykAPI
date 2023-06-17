@@ -30,11 +30,12 @@
       </form>
     <hr>
       <form name="GetBoardForm" action="" method="GET">
-        Get board <!-- => token for login, game id: <br>
+        Get board => <!-- => token for login, game id: <br>
         <input type="text" name="gameidinputbox" value="13">
         <input type="button" name="button" value="Get game" onClick="getboardResults(this.form)">
         -->
-        <label id="gameid_label">10</label>
+        <label id="gameid_label"></label><br>
+        <input size=1 type="button" name="refreshButton" value="Refresh!" onClick="refreshBoard(document.getElementById('gameid_label').innerText)">
         <div>
             <br>
             <table id="tabelka" style="width: 200" BORDER="1">
@@ -44,9 +45,9 @@
                 <th style="width: 30; height: 30" align="center" bgcolor="silver">2</th>
               <tr>
                 <th bgcolor="silver">0</th>
-                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange'" onmouseout="style.backgroundColor ='white'"> </td>
-                <td style="width: 30; height: 30" align="center" > </td>
-                <td style="width: 30; height: 30" align="center" > </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(0,0,tabelka.rows[1].cells[1].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(0,1,tabelka.rows[1].cells[1].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(0,2,tabelka.rows[1].cells[1].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
               </tr>
               <tr>
                 <th bgcolor="silver">1</th>
@@ -223,6 +224,47 @@
                 .catch(error =>{console.error(error)});
                 }
 
+
+                
+    
+            function refreshBoard(i_gameid) {
+              const token = loginForm.tokeninputbox.value;
+              const gameid = i_gameid;
+              axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/board?gameid="+gameid, {
+                  headers: {
+                      Authorization: 'Bearer ' + token //the token is a variable which holds the token
+                  }})
+
+              .then(response =>{console.log(response.data);
+                  //var table = form.tabelka;
+                  var table = document.getElementById('tabelka');                                        
+                  table.rows[1].cells[1].innerHTML = response.data.board.row1[0];
+                  table.rows[1].cells[2].innerHTML = response.data.board.row1[1];
+                  table.rows[1].cells[3].innerHTML = response.data.board.row1[2];
+                  table.rows[2].cells[1].innerHTML = response.data.board.row2[0];
+                  table.rows[2].cells[2].innerHTML = response.data.board.row2[1];
+                  table.rows[2].cells[3].innerHTML = response.data.board.row2[2];
+                  table.rows[3].cells[1].innerHTML = response.data.board.row3[0];
+                  table.rows[3].cells[2].innerHTML = response.data.board.row3[1];
+                  table.rows[3].cells[3].innerHTML = response.data.board.row3[2];
+                  var x = document.getElementById("game_status");  
+                  x.innerText="Status: " + response.data.status;
+              })
+              .catch(error =>{console.error(error)});
+
+              axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/checknextmove?gameid="+gameid, {
+                  headers: {
+                      Authorization: 'Bearer ' + token //the token is a variable which holds the token
+                  }})
+
+              .then(response =>{console.log(response.data);
+                  var x = document.getElementById("nextmove_label");  
+                  x.innerText="Twój ruch? " + (response.data == true ? "TAK" : "NIE");
+                  if (response.data == true) callJakaGramFigura(token, gameid);
+              })
+              .catch(error =>{console.error(error)});
+              }
+
             function callJakaGramFigura(token, gameid){
                 console.log("sprawdzam figure");
                 axios.get("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/checkmysymbolingame?gameid="+gameid, {
@@ -236,7 +278,7 @@
                 .catch(error =>{console.error(error)});
             }
             
-            function doMove(gameid){
+            function doMove(formularz){
               const token = loginForm.tokeninputbox.value;
                 console.log("robimy ruch");
 
@@ -255,9 +297,24 @@
                 
                 .then(response =>{console.log(response.data);
                     })
-                .catch(error =>{console.error(error)});
+                .catch(error =>{console.error(error);
+                  console.log(error.response.data)});
             }
             
+
+            function doGetTableXY(row,col,zawartosc){
+                console.log("X="+row+ "Y="+col+" zawartosc->"+zawartosc+"<-");
+                if (zawartosc=="") {
+                  console.log("pusta kratka");
+                  GetBoardForm.input_row.value=row;
+                  GetBoardForm.input_col.value=col;
+                }
+                else {console.log("niepusta kratka")}
+
+              
+            }
+            
+
 
 
             function testResults (form) {
