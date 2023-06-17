@@ -34,6 +34,7 @@
         <input type="text" name="gameidinputbox" value="13">
         <input type="button" name="button" value="Get game" onClick="getboardResults(this.form)">
         -->
+        <label id="gameid_label">10</label>
         <div>
             <br>
             <table id="tabelka" style="width: 200" BORDER="1">
@@ -70,6 +71,18 @@
               </tr>
               <tr>
                 <td colspan="4" align="center" ><label id="nextmove_label"></label></td>
+              </tr>
+              <tr>
+                <th bgcolor="silver">Row</th>
+                <td colspan="3" style="width: 30; height: 30" align="left"><input size=1 type="text" name="input_row" value="0"></td>
+              </tr>
+              <tr>
+                <th bgcolor="silver">Col</th>
+                <td colspan="3" style="width: 30; height: 30" align="left"><input size=1 type="text" name="input_col" value="0"></td>
+              </tr>
+              <tr>
+                <td></td>
+                <td colspan="3" style="width: 30; height: 30" align="left"><input size=1 type="button" name="moveButton" value="Move!" onClick="doMove(this.form)"></td>
               </tr>
             </table>
           </div>
@@ -192,6 +205,8 @@
                     x.innerText="Player1: " + i_user1;
                     x = document.getElementById("user2_label");  
                     x.innerText="Player2: " + i_user2;
+                    x = document.getElementById("gameid_label");  
+                    x.innerText=i_gameid;
                 })
                 .catch(error =>{console.error(error)});
 
@@ -218,6 +233,28 @@
                 .then(response =>{console.log(response.data);
                     var x = document.getElementById("nextmove_label");  
                     x.innerText=x.innerText + "("+ response.data+")";})
+                .catch(error =>{console.error(error)});
+            }
+            
+            function doMove(gameid){
+              const token = loginForm.tokeninputbox.value;
+                console.log("robimy ruch");
+
+                const i_row = GetBoardForm.input_row.value;
+                const i_col = GetBoardForm.input_col.value;
+                var x = document.getElementById("gameid_label");  
+                //const i_gameid = GetBoardForm.gameid_label.innerText;
+                const i_gameid = x.innerText;
+                     
+                axios.post("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/move?gameid="+`${i_gameid}`+"&row="+`${i_row}`+"&col="+`${i_col}`, 
+                    {},
+                    { 
+                    headers: {
+                        Authorization: 'Bearer ' + token //the token is a variable which holds the token
+                    }})
+                
+                .then(response =>{console.log(response.data);
+                    })
                 .catch(error =>{console.error(error)});
             }
             
