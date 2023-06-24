@@ -45,21 +45,21 @@
                 <th style="width: 30; height: 30" align="center" bgcolor="silver">2</th>
               <tr>
                 <th bgcolor="silver">0</th>
-                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(0,0,tabelka.rows[1].cells[1].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
-                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(0,1,tabelka.rows[1].cells[1].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
-                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(0,2,tabelka.rows[1].cells[1].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(1,1,tabelka.rows[1].cells[1].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(1,2,tabelka.rows[1].cells[2].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(1,3,tabelka.rows[1].cells[3].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
               </tr>
               <tr>
                 <th bgcolor="silver">1</th>
-                <td style="width: 30; height: 30" align="center"> </td>
-                <td style="width: 30; height: 30" align="center"> </td>
-                <td style="width: 30; height: 30" align="center"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(2,1,tabelka.rows[2].cells[1].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(2,2,tabelka.rows[2].cells[2].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(2,3,tabelka.rows[2].cells[3].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
               </tr>
               <tr>
                 <th bgcolor="silver">2</th>
-                <td style="width: 30; height: 30" align="center"> </td>
-                <td style="width: 30; height: 30" align="center"> </td>
-                <td style="width: 30; height: 30" align="center"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(3,1,tabelka.rows[3].cells[1].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(3,2,tabelka.rows[3].cells[2].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
+                <td style="width: 30; height: 30" align="center" onmouseover="style.backgroundColor ='orange';doGetTableXY(3,3,tabelka.rows[3].cells[3].innerText)" onmouseout="style.backgroundColor ='white'" onClick="doMove(this.form)"> </td>
               </tr>
               <tr>
                 <td colspan="4" align="center" ><label id="game_status"></label></td>
@@ -99,6 +99,8 @@
     
         <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
         <script>
+          var czyruchmozliwy = false;
+          var czytwojruch = false;
 
             function loginResults (form) {
                 const user = loginForm.user_inputbox.value;
@@ -219,7 +221,14 @@
                 .then(response =>{console.log(response.data);
                     var x = document.getElementById("nextmove_label");  
                     x.innerText="Twój ruch? " + (response.data == true ? "TAK" : "NIE");
-                    if (response.data == true) callJakaGramFigura(token, gameid);
+                    if (response.data == true) {
+                      czytwojruch = true; 
+                      console.log("zwróciliśmy TRUE jako Twój Ruch");
+                      callJakaGramFigura(token, gameid);
+                    }
+                    else { czytwojruch = false;
+                      console.log("zwróciliśmy FALSE jako Twój Ruch");
+                    }
                 })
                 .catch(error =>{console.error(error)});
                 }
@@ -260,7 +269,12 @@
               .then(response =>{console.log(response.data);
                   var x = document.getElementById("nextmove_label");  
                   x.innerText="Twój ruch? " + (response.data == true ? "TAK" : "NIE");
-                  if (response.data == true) callJakaGramFigura(token, gameid);
+                  if (response.data == true)
+                  {
+                    czytwojruch = true;
+                    callJakaGramFigura(token, gameid);
+                  }
+                  else {czytwojruch = false;}
               })
               .catch(error =>{console.error(error)});
               }
@@ -280,8 +294,9 @@
             
             function doMove(formularz){
               const token = loginForm.tokeninputbox.value;
-                console.log("robimy ruch");
+                console.log("robimy ruch? "+czyruchmozliwy+"!");
 
+                if (czyruchmozliwy){
                 const i_row = GetBoardForm.input_row.value;
                 const i_col = GetBoardForm.input_col.value;
                 var x = document.getElementById("gameid_label");  
@@ -296,9 +311,13 @@
                     }})
                 
                 .then(response =>{console.log(response.data);
+                    refreshBoard(i_gameid);
                     })
                 .catch(error =>{console.error(error);
                   console.log(error.response.data)});
+                }
+                else
+                {alert("Nie możesz tutaj wykonać ruchu!")}
             }
             
 
@@ -306,10 +325,21 @@
                 console.log("X="+row+ "Y="+col+" zawartosc->"+zawartosc+"<-");
                 if (zawartosc=="") {
                   console.log("pusta kratka");
-                  GetBoardForm.input_row.value=row;
-                  GetBoardForm.input_col.value=col;
+                  GetBoardForm.input_row.value=row-1;
+                  GetBoardForm.input_col.value=col-1;
+                  if (czytwojruch) czyruchmozliwy = true;
+                  else czyruchmozliwy = false;
+                  //GetBoardForm.moveButton.disabled = false;
+                  console.log("czy ruch mozliwy->"+czyruchmozliwy+"<-"+czytwojruch);
                 }
-                else {console.log("niepusta kratka")}
+                else {
+                  console.log("niepusta kratka");
+                  GetBoardForm.input_row.value=row-1;
+                  GetBoardForm.input_col.value=col-1;
+                  czyruchmozliwy = false;
+                  //GetBoardForm.moveButton.disabled = true;
+                  console.log("czy ruch mozliwy->"+czyruchmozliwy+"<-"+czytwojruch);
+                }
 
               
             }
