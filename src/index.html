@@ -1,8 +1,19 @@
 <body>
 
     <p id="demo">Gramy w kółko i krzyżyk?</p>
+    <hr>
+      <form name="registerUserForm" action="" method="PUT">
+        Jeśli nie masz jeszcze swojego użytkownika - zarejestruj się: <br>
+        <input type="text" name="newuser_inputbox" value="podaj_username">
+        <input type="password" name="newpassword_inputbox" value="">
+        <input type="button" name="button" value="Zarejestruj nowego użytkownika!" onClick="registerNewUser(this.form)"> 
+        ==> UserId: 
+        <input type="text" name="newuserid" value=""> <label id="newuserid_label"> </label>
+      </form>
+    <hr>
+    
     <form name="loginForm" action="" method="PUT">
-        Provide username & password: <br>
+        LOGOWANIE DO GRY: Podaj login i hasło: <br>
         <input type="text" name="user_inputbox" value="adamg">
         <input type="password" name="password_inputbox" value="alamakota1">
         <input type="button" name="button" value="Login" onClick="loginResults(this.form)"> 
@@ -29,6 +40,7 @@
         <input type="button" name="button" value="Create" onClick="creategameResults(this.form)">
       </form>
     <hr>
+    
       <form name="GetBoardForm" action="" method="GET">
         Get board => <!-- => token for login, game id: <br>
         <input type="text" name="gameidinputbox" value="13">
@@ -101,15 +113,38 @@
         <script>
           var czyruchmozliwy = false;
           var czytwojruch = false;
-
+          var czystatusgryok = false;
+          
             function loginResults (form) {
                 const user = loginForm.user_inputbox.value;
-                const password = form.password_inputbox.value;
+                const password = loginForm.password_inputbox.value;
                 axios.post("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/account/login?", {
                      username: `${user}`, password:`${password}` })                
                 .then(response =>{console.log(response.data.token);loginForm.tokeninputbox.value=response.data.token;
                     var x = document.getElementById("password_label");  
-                    x.innerText="Pobrano token :-)"})
+                    x.innerText="Pobrano token :-)";
+                    console.log("Pobieramy listę dostępnych gier...");
+                    listgamesResults(form);
+                  })
+                .catch(error =>{console.error(error)});
+                }
+
+
+            function registerNewUser (form) {
+                const user = registerUserForm.newuser_inputbox.value;
+                const password = registerUserForm.newpassword_inputbox.value;
+                axios.post("https://kolkoikrzyzyksrv-dot-intense-dolphin-376811.uc.r.appspot.com/v1/account/register?", {
+                     username: `${user}`, password:`${password}` })                
+                .then(response =>{
+                  console.log(response.data);
+                  console.log(response.data.id);registerUserForm.newuserid.value=response.data.id;
+                    var x = document.getElementById("newuserid_label");  
+                    x.innerText=response.data.username;
+                    loginForm.user_inputbox.value = response.data.username;
+                    loginForm.password_inputbox.value = registerUserForm.newpassword_inputbox.value;
+                    console.log("Logujemy od razu użytkownika...");
+                    loginResults(form);
+                  })
                 .catch(error =>{console.error(error)});
                 }
 
@@ -123,7 +158,10 @@
                         Authorization: 'Bearer ' + token //the token is a variable which holds the token
                     }})
                 
-                .then(response =>{console.log(response.data);})
+                .then(response =>{console.log(response.data);
+                    console.log("Pobieramy listę dostępnych gier...");
+                    listgamesResults(form);
+                  })
                 .catch(error =>{console.error(error)});
                 }
 
@@ -204,6 +242,11 @@
                     table.rows[3].cells[3].innerHTML = response.data.board.row3[2];
                     var x = document.getElementById("game_status");  
                     x.innerText="Status: " + response.data.status;
+                    if (response.data.status == "playing")
+                    {
+                      czystatusgryok = true;
+                    }
+                    else {czystatusgryok = false;}
                     x = document.getElementById("user1_label");  
                     x.innerText="Player1: " + i_user1;
                     x = document.getElementById("user2_label");  
@@ -258,6 +301,11 @@
                   table.rows[3].cells[3].innerHTML = response.data.board.row3[2];
                   var x = document.getElementById("game_status");  
                   x.innerText="Status: " + response.data.status;
+                  if (response.data.status == "playing"){
+                    czystatusgryok = true;
+                  }
+                  else {czystatusgryok = false;}
+
               })
               .catch(error =>{console.error(error)});
 
@@ -296,7 +344,7 @@
               const token = loginForm.tokeninputbox.value;
                 console.log("robimy ruch? "+czyruchmozliwy+"!");
 
-                if (czyruchmozliwy){
+                if (CzyMogeZagrac()){
                 const i_row = GetBoardForm.input_row.value;
                 const i_col = GetBoardForm.input_col.value;
                 var x = document.getElementById("gameid_label");  
@@ -344,6 +392,11 @@
               
             }
             
+            function CzyMogeZagrac()
+            {
+              if (czystatusgryok & czytwojruch & czyruchmozliwy) return true;
+              return false;
+            }
 
 
 
